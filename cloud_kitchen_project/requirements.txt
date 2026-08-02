@@ -1,0 +1,6 @@
+streamlit
+pulp
+numpy
+pandas
+plotly
+openai
