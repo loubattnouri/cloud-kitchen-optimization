@@ -19,6 +19,22 @@ st.set_page_config(
 st.title("🍳 سیستم تصمیم‌گیری و بهینه‌سازی آشپزخانه ابری و کترینگ زنجیره‌ای")
 st.caption("دانشگاه صنعتی شریف | پروژه درس برنامه‌نویسی پیشرفته")
 
+# ----------------------------------------------------
+# سایدبار: شبیه‌سازی عدم قطعیت (خواسته کلیدی استاد)
+# ----------------------------------------------------
+st.sidebar.header("⚠️ تنظیمات سناریو و عدم قطعیت")
+st.sidebar.write("در دنیای واقعی زنجیره تامین همواره قطعی نیست.")
+crisis_mode = st.sidebar.checkbox("فعال‌سازی شوک تقاضا و بحران تامین")
+
+if crisis_mode:
+    st.sidebar.warning("وضعیت بحران فعال است! تامین مواد اولیه ۴۰٪ کاهش و کف تقاضا ۳۰٪ افزایش یافته است.")
+    supply_factor = 0.6  # تامین مواد اولیه به مشکل خورده است
+    demand_factor = 1.3  # شوک تقاضا ایجاد شده است
+else:
+    st.sidebar.success("وضعیت زنجیره تامین پایدار و نرمال است.")
+    supply_factor = 1.0
+    demand_factor = 1.0
+
 # ساخت تب‌های اصلی برنامه
 tab_lp, tab_ga, tab_chat = st.tabs([
     "📊 ۱. بهینه‌سازی تولید و ضایعات (LP)", 
@@ -38,18 +54,25 @@ with tab_lp:
         st.subheader("⚙️ پارامترهای ورودی انبار و تولید")
         max_time = st.number_input("حداکثر زمان کاری آشپزخانه (دقیقه):", value=1800, step=100)
         
-        st.write("**موجودی انبار (کیلوگرم):**")
+        st.write("**موجودی اولیه انبار (کیلوگرم):**")
         rice_stock = st.slider("موجودی برنج:", 50, 400, 150)
         meat_stock = st.slider("موجودی گوشت:", 20, 200, 60)
         oil_stock = st.slider("موجودی روغن:", 10, 100, 30)
         
-        ingredients_supply = {"Rice": rice_stock, "Meat": meat_stock, "Oil": oil_stock}
+        # اعمال ضریب بحران روی موجودی انبار
+        ingredients_supply = {
+            "Rice": rice_stock * supply_factor, 
+            "Meat": meat_stock * supply_factor, 
+            "Oil": oil_stock * supply_factor
+        }
+        
         ingredient_costs = {"Rice": 80, "Meat": 450, "Oil": 90} # قیمت به هزار تومان
         
+        # اعمال ضریب بحران روی تقاضا
         menu_items = [
-            {"name": "چلوکباب", "price": 250, "prep_time": 15, "recipe": {"Rice": 0.35, "Meat": 0.2, "Oil": 0.05}, "min_demand": 30, "max_demand": 200},
-            {"name": "زرشک‌پلو", "price": 180, "prep_time": 10, "recipe": {"Rice": 0.3, "Meat": 0.15, "Oil": 0.04}, "min_demand": 20, "max_demand": 150},
-            {"name": "جوجه‌کباب", "price": 200, "prep_time": 12, "recipe": {"Rice": 0.35, "Meat": 0.18, "Oil": 0.03}, "min_demand": 25, "max_demand": 180},
+            {"name": "چلوکباب", "price": 250, "prep_time": 15, "recipe": {"Rice": 0.35, "Meat": 0.2, "Oil": 0.05}, "min_demand": int(30 * demand_factor), "max_demand": 200},
+            {"name": "زرشک‌پلو", "price": 180, "prep_time": 10, "recipe": {"Rice": 0.3, "Meat": 0.15, "Oil": 0.04}, "min_demand": int(20 * demand_factor), "max_demand": 150},
+            {"name": "جوجه‌کباب", "price": 200, "prep_time": 12, "recipe": {"Rice": 0.35, "Meat": 0.18, "Oil": 0.03}, "min_demand": int(25 * demand_factor), "max_demand": 180},
         ]
         
         btn_run_lp = st.button("🚀 اجرای بهینه‌سازی تولید (LP)", key="lp_btn")
